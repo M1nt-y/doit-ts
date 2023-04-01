@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
+import ReloadPWA from './components/ReloadPWA.vue'
 import HelloWorld from './components/HelloWorld.vue'
 </script>
 
 <template>
+  <ReloadPWA />
   <header>
     <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
 
