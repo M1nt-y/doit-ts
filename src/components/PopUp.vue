@@ -119,14 +119,14 @@ const submitForm = async () => {
             :label="'Username or email'"
             placeholder="Username or email"
             v-model="mainStore.formData.login"
-            :errors="v$.login.$errors"
+            :errors="v$?.login?.$errors"
         />
         <BaseInput
             v-else-if="mainStore.popupType.signup"
             :label="'Email'"
             placeholder="Email"
             v-model="mainStore.formData.email"
-            :errors="v$.email.$errors"
+            :errors="v$?.email?.$errors"
             :single-error="mainStore.singleError"
         />
         <BaseInput
@@ -134,14 +134,14 @@ const submitForm = async () => {
             :label="'Username'"
             placeholder="Username"
             v-model="mainStore.formData.username"
-            :errors="v$.username.$errors"
+            :errors="v$?.username?.$errors"
         />
         <BaseInput
             v-if="showPass"
             :label="'Password'"
             placeholder="Password"
             v-model="mainStore.formData.password"
-            :errors="v$.password.$errors"
+            :errors="v$?.password?.$errors"
         />
 
         <BaseSelect

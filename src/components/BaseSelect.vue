@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import {ref} from 'vue'
+import type { PropType } from 'vue'
+import type Country from '@/types/Country'
 
 defineProps({
   modelValue: {
@@ -7,10 +9,17 @@ defineProps({
     default: ''
   },
   options: {
-    type: Array,
-    default: () => []
+    required: true,
+    type: Array as PropType<Country[]>
   }
 })
+
+const emits = defineEmits(['update:modelValue'])
+
+function emitInput(event: Event) {
+  const target = event.target as HTMLInputElement
+  emits('update:modelValue', target.value)
+}
 
 const isActive = ref(false)
 
@@ -26,7 +35,7 @@ function toggleSelect() {
         class="input" type="text"
         ref="customSelect" :value="modelValue"
         @click="toggleSelect"
-        @input="$emit('update:modelValue', $event.target.value)"
+        @input="emitInput($event)"
         v-bind="$attrs"
     />
 

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { PropType } from 'vue'
+import type { ErrorObject } from '@vuelidate/core'
+
 defineProps({
   label: {
     type: String,
@@ -9,14 +12,21 @@ defineProps({
     default: ''
   },
   errors: {
-    type: Array,
-    default: () => []
+    required: false,
+    type: Array as PropType<ErrorObject[]>
   },
   singleError: {
     type: String,
     default: ''
   }
 })
+
+const emits = defineEmits(['update:modelValue'])
+
+function emitInput(event: Event) {
+  const target = event.target as HTMLInputElement
+  emits('update:modelValue', target.value)
+}
 </script>
 
 <template>
@@ -24,8 +34,8 @@ defineProps({
     <p class="input-wrapper__label">{{ label }}</p>
     <input
         class="input" type="text" :value="modelValue"
-        :class="{'input--error': errors.length > 0}"
-        @input="$emit('update:modelValue', $event.target.value)"
+        :class="{'input--error': errors && errors.length > 0}"
+        @input="emitInput($event)"
         v-bind="$attrs"
     />
     <p class="input-wrapper__error-message" v-if="singleError">{{ singleError }}</p>
