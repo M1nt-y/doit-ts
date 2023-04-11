@@ -17,41 +17,63 @@ body {
 
 #app {
   height: 100vh;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-family: 'Rubik', sans-serif;
   font-style: normal;
+  font-family: 'Rubik', sans-serif;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
 }
 
 .main {
-  flex: 1 1 auto;
   display: flex;
-  justify-content: center;
+  flex: 1 1 auto;
   padding-top: 128px;
   background: $bg-main;
+  justify-content: center;
+}
+
+.backdrop {
+  position: fixed;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(12px);
+  background: rgba(15, 18, 21, 0.3);
+}
+
+.pop-up {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  padding: 16px;
+  width: 36.3542%;
+  aspect-ratio: 1 / 1;
+  background: $bg-dark;
+  transform: translate(-50%, -50%);
 }
 
 .container {
+  display: flex;
   margin: 0 auto;
   padding: 0 23px;
   max-width: 1216px;
-  display: flex;
 }
 
 .button {
   border: none;
+  color: #F5F5F5;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
   background: none;
+  line-height: 20px;
+  font-style: normal;
+  text-align: center;
   padding: 12px 30px;
   border-radius: 2px;
-  font-family: 'Rubik', sans-serif;
-  font-style: normal;
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 20px;
-  text-align: center;
-  color: #F5F5F5;
   letter-spacing: 0.2px;
+  font-family: 'Rubik', sans-serif;
 }
 .button-default {
   margin-right: 8px;
@@ -62,8 +84,44 @@ body {
 }
 .button-block {
   width: 100%;
-  padding: 16px 30px;
   line-height: 100%;
+  padding: 16px 30px;
+}
+
+.input {
+  width: 100%;
+  outline: none;
+  background: none;
+  padding: 12px 16px;
+  border-radius: 2px;
+  border: 1px solid #16263D;
+  font-family: 'Rubik', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 100%;
+  color: #627CA3;
+  transition: all .4s;
+  &:hover {
+    background: #121F33;
+    border: 1px solid #627CA3;
+  }
+  &:focus {
+    color: #E6E6E6;
+    background: #16263D;
+    border: 1px solid #185EC7;
+  }
+  &:disabled {
+    color: #98A4B5;
+    background: #121F33;
+    border: 1px solid #121F33;
+  }
+  &--error {
+    border: 1px solid #B83333;
+  }
+  &--success {
+    border: 1px solid #4CB725;
+  }
 }
 
 @media screen and (max-width: 1480px) {
