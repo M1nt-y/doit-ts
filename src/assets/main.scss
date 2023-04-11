@@ -47,7 +47,8 @@ body {
   left: 50%;
   z-index: 2;
   padding: 16px;
-  width: 36.3542%;
+  width: 100%;
+  max-width: 698px;
   aspect-ratio: 1 / 1;
   background: $bg-dark;
   transform: translate(-50%, -50%);
@@ -143,6 +144,18 @@ body {
   .main {
     padding-top: 111px;
     padding-bottom: 82px;
+  }
+  .pop-up {
+    max-width: none;
+    height: 100%;
+    &__wrapper {
+      width: 100%;
+      min-height: 100%;
+      height: auto;
+      padding-top: 19px;
+      padding-bottom: 68px;
+      overflow: scroll;
+    }
   }
 }
 

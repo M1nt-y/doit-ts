@@ -110,99 +110,102 @@ const submitForm = async () => {
         <path d="M8 8L24 24" stroke="#627CA3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <img class="pop-up__logo" src="@/assets/logo.png" alt="">
-    <h1 class="pop-up__title" v-if="showTitle">{{ popupTitle }}</h1>
-    <div class="pop-up__content">
-      <div class="pop-up__inputs" v-if="showTitle">
-        <BaseInput
-            v-if="mainStore.popupType.login || mainStore.popupType.forgotPass"
-            :label="'Username or email'"
-            placeholder="Username or email"
-            v-model="mainStore.formData.login"
-            :errors="v$?.login?.$errors"
-        />
-        <BaseInput
-            v-else-if="mainStore.popupType.signup"
-            :label="'Email'"
-            placeholder="Email"
-            v-model="mainStore.formData.email"
-            :errors="v$?.email?.$errors"
-            :single-error="mainStore.singleError"
-        />
-        <BaseInput
-            v-else
-            :label="'Username'"
-            placeholder="Username"
-            v-model="mainStore.formData.username"
-            :errors="v$?.username?.$errors"
-        />
-        <BaseInput
-            v-if="showPass"
-            :label="'Password'"
-            placeholder="Password"
-            v-model="mainStore.formData.password"
-            :errors="v$?.password?.$errors"
-        />
+    <div class="pop-up__wrapper" v-if="showTitle">
+      <img class="pop-up__logo" src="@/assets/logo.png" alt="">
+      <h1 class="pop-up__title" v-if="showTitle">{{ popupTitle }}</h1>
+      <div class="pop-up__content">
+        <div class="pop-up__inputs" v-if="showTitle">
+          <BaseInput
+              v-if="mainStore.popupType.login || mainStore.popupType.forgotPass"
+              :label="'Username or email'"
+              placeholder="Username or email"
+              v-model="mainStore.formData.login"
+              :errors="v$?.login?.$errors"
+          />
+          <BaseInput
+              v-else-if="mainStore.popupType.signup"
+              :label="'Email'"
+              placeholder="Email"
+              v-model="mainStore.formData.email"
+              :errors="v$?.email?.$errors"
+              :single-error="mainStore.singleError"
+          />
+          <BaseInput
+              v-else
+              :label="'Username'"
+              placeholder="Username"
+              v-model="mainStore.formData.username"
+              :errors="v$?.username?.$errors"
+          />
 
-        <BaseSelect
-            v-else
-            placeholder="Select country"
-            v-model="mainStore.formData.country"
-            :options="mainStore.countries"
-        />
+          <BaseInput
+              v-if="showPass"
+              :label="'Password'"
+              placeholder="Password"
+              v-model="mainStore.formData.password"
+              :errors="v$?.password?.$errors"
+          />
 
-        <!--   v-else Country select && Bday inputs     -->
+          <BaseSelect
+              v-if="mainStore.popupType.signupNext"
+              placeholder="Select country"
+              v-model="mainStore.formData.country"
+              :options="mainStore.countries"
+          />
 
-
-      </div>
-
-
-      <!--   v-else Report scores || Signup done   -->
+          <!--   Bday inputs     -->
 
 
-      <button class="button button-gradient button-block" @click="submitForm">{{ btnContent }}</button>
-      <div class="pop-up__options" v-if="showOptions">
-        <p class="pop-up__options-text">
-          or
-          <span v-if="mainStore.popupType.login"> login </span>
-          <span v-else> signup </span>
-          with
-        </p>
-        <div class="pop-up__options-icons">
-          <div class="pop-up__option">
-            <img src="@/assets/icons/facebook.png" alt="">
-          </div>
-          <div class="pop-up__option">
-            <img src="@/assets/icons/battle.png" alt="">
-          </div>
-          <div class="pop-up__option">
-            <img src="@/assets/icons/google.png" alt="">
-          </div>
-          <div class="pop-up__option">
-            <img src="@/assets/icons/steam.png" alt="">
+        </div>
+
+
+        <!--   v-else Signup done   -->
+
+
+        <button class="button button-gradient button-block" @click="submitForm">{{ btnContent }}</button>
+        <div class="pop-up__options" v-if="showOptions">
+          <p class="pop-up__options-text">
+            or
+            <span v-if="mainStore.popupType.login"> login </span>
+            <span v-else> signup </span>
+            with
+          </p>
+          <div class="pop-up__options-icons">
+            <div class="pop-up__option">
+              <img src="@/assets/icons/facebook.png" alt="">
+            </div>
+            <div class="pop-up__option">
+              <img src="@/assets/icons/battle.png" alt="">
+            </div>
+            <div class="pop-up__option">
+              <img src="@/assets/icons/google.png" alt="">
+            </div>
+            <div class="pop-up__option">
+              <img src="@/assets/icons/steam.png" alt="">
+            </div>
           </div>
         </div>
-      </div>
-      <div class="pop-up__alt">
-        <p class="pop-up__alt-forgot pop-up__alt-link"
-           v-if="mainStore.popupType.login"
-           @click="mainStore.showForgot">
-          Forgot password?
-        </p>
-        <p v-if="mainStore.popupType.login">
-          Don't have an account?
-          <span class="pop-up__alt-link" @click="mainStore.showSignup">Sign up!</span>
-        </p>
-        <p class="pop-up__alt-forgot pop-up__alt-link"
-           v-else-if="mainStore.popupType.forgotPass"
-           @click="mainStore.showLogin">
-          Back to login
-        </p>
-        <p v-else-if="mainStore.popupType.signup">
-          Already have an account?
-          <span class="pop-up__alt-link" @click="mainStore.showLogin">Login!</span>
-        </p>
+        <div class="pop-up__alt">
+          <p class="pop-up__alt-forgot pop-up__alt-link"
+             v-if="mainStore.popupType.login"
+             @click="mainStore.showForgot">
+            Forgot password?
+          </p>
+          <p v-if="mainStore.popupType.login">
+            Don't have an account?
+            <span class="pop-up__alt-link" @click="mainStore.showSignup">Sign up!</span>
+          </p>
+          <p class="pop-up__alt-forgot pop-up__alt-link"
+             v-else-if="mainStore.popupType.forgotPass"
+             @click="mainStore.showLogin">
+            Back to login
+          </p>
+          <p v-else-if="mainStore.popupType.signup">
+            Already have an account?
+            <span class="pop-up__alt-link" @click="mainStore.showLogin">Login!</span>
+          </p>
 
+        </div>
       </div>
     </div>
   </div>
@@ -222,6 +225,12 @@ const submitForm = async () => {
     &-icon {
       cursor: pointer;
     }
+  }
+  &__wrapper {
+    min-width: 240px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
   }
   &__content {
     width: 100%;
@@ -284,6 +293,18 @@ const submitForm = async () => {
     &-link:hover {
       color: #0960E0;
     }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .pop-up__logo {
+    margin-bottom: 30px;
+  }
+  .pop-up__title {
+    margin-bottom: 22px;
+  }
+  .pop-up__options, .pop-up__alt {
+    margin-top: 22px;
   }
 }
 </style>
