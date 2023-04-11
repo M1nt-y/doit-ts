@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import ReloadPWA from "@/components/ReloadPWA.vue";
-import { useRoute } from "vue-router";
-const route = useRoute();
+import ReloadPWA from '@/components/ReloadPWA.vue'
+import { useRoute } from 'vue-router'
+const route = useRoute()
 </script>
 
 <template>

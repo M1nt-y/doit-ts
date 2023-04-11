@@ -110,14 +110,14 @@ const display = computed(() => {
     line-height: 100%;
     text-align: center;
     color: #F5F5F5;
-    letter-spacing: -2px;
+    //letter-spacing: -2px;
   }
   &__text {
     margin-top: 17px;
     max-width: 463px;
     font-size: 16px;
     line-height: 150%;
-    letter-spacing: 0.3px;
+    //letter-spacing: 0.3px;
     text-align: center;
     color: #CCCCCC;
     -webkit-text-fill-color: #CCCCCC;

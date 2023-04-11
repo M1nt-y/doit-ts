@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useMainStore } from '@/stores/main'
 
-const mainStore = useMainStore();
+const mainStore = useMainStore()
 
 const isBurger = computed(() => {
   return mainStore.windowWidth <= 1250;
@@ -23,8 +23,8 @@ const isBurger = computed(() => {
         </div>
       </div>
       <div class="header__buttons">
-        <button class="button button-default">Login</button>
-        <button class="button button-gradient">Sign up</button>
+        <button class="button button-default" @click="mainStore.showLogin">Login</button>
+        <button class="button button-gradient" @click="mainStore.showSignup">Sign up</button>
       </div>
     </div>
 
@@ -59,6 +59,7 @@ const isBurger = computed(() => {
   top: 0;
   width: 100%;
   color: #F5F5F5;
+  background: #0F1215;
   padding: 32px 0;
   font-style: normal;
   font-weight: 700;
