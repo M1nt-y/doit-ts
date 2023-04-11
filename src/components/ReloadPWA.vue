@@ -56,8 +56,10 @@ async function handleUpdateServiceWorker() {
   padding: 12px;
   border: 1px solid #8885;
   border-radius: 4px;
-  z-index: 1;
+  z-index: 2;
   text-align: left;
+  color: #F5F5F5;
+  background: #0F1215;
   box-shadow: 3px 4px 5px 0 #8885;
   & .message {
     margin-bottom: 8px;
