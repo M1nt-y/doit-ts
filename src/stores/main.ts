@@ -25,6 +25,11 @@ export const useMainStore = defineStore('Main', {
             month: '',
             year: ''
         },
+        customSelect: {
+          active: false,
+          input: '',
+          selected: ''
+        },
         countries: [
             {name: 'Afghanistan', code: 'AF'},
             {name: 'Åland Islands', code: 'AX'},
@@ -371,7 +376,6 @@ export const useMainStore = defineStore('Main', {
                         console.log(response.data)
                 })
             }
-
         }
 
 

@@ -7,7 +7,7 @@ import { useMainStore } from '@/stores/main'
 import BaseSelect from "@/components/BaseSelect.vue";
 
 
-const mainStore = useMainStore();
+const mainStore = useMainStore()
 
 const popupTitle = computed(() => {
   if (mainStore.popupType.login) {
@@ -64,7 +64,7 @@ const rules = computed(() => {
   }
   else if (mainStore.popupType.signupNext) {
     return {
-      username: { required },
+      username: { required, username },
       country: { required },
       day: { required },
       month: { required },
@@ -89,16 +89,18 @@ const submitForm = async () => {
     else if (mainStore.popupType.signup) {
       await mainStore.signup()
     }
+    else if (mainStore.popupType.signupNext) {
+      await mainStore.continueSignup()
+    }
   }
   else {
-    await mainStore.continueSignup()
-
+    alert('fail')
   }
 }
 </script>
 
 <template>
-  <div class="pop-up">
+  <div class="pop-up" @click="mainStore.customSelect.active = false">
     <div class="pop-up__controls">
       <svg class="pop-up__controls-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M25.3334 16H6.66675" stroke="#1C2F4D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -148,12 +150,39 @@ const submitForm = async () => {
 
           <BaseSelect
               v-if="mainStore.popupType.signupNext"
-              placeholder="Select country"
               v-model="mainStore.formData.country"
               :options="mainStore.countries"
+              placeholder="Select country"
+              @click.stop :label="'Country'"
+              :errors="v$?.country?.$errors"
           />
 
-          <!--   Bday inputs     -->
+          <div class="birthdate" v-if="mainStore.popupType.signupNext">
+            <p class="birthdate__label">Date of birth</p>
+            <div class="birthdate__inputs">
+              <BaseInput
+                  placeholder="dd" type="number"
+                  v-model="mainStore.formData.day"
+                  :errors="v$?.day?.$errors"
+                  :displayErrors="false"
+              />
+              <BaseInput
+                  placeholder="mm" type="number"
+                  v-model="mainStore.formData.month"
+                  :errors="v$?.month?.$errors"
+                  :displayErrors="false"
+              />
+              <BaseInput
+                  placeholder="yyyy" type="number"
+                  v-model="mainStore.formData.year"
+                  :errors="v$?.year?.$errors"
+                  :displayErrors="false"
+              />
+            </div>
+            <div class="birthdate__errors">
+
+            </div>
+          </div>
 
 
         </div>
@@ -292,6 +321,20 @@ const submitForm = async () => {
     }
     &-link:hover {
       color: #0960E0;
+    }
+  }
+}
+
+.birthdate {
+  //margin-bottom: 16px;
+  &__label {
+    margin-bottom: 6px;
+  }
+  &__inputs {
+    display: flex;
+    & .input-wrapper:nth-child(2) {
+      margin-left: 12px;
+      margin-right: 12px;
     }
   }
 }
