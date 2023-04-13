@@ -229,9 +229,8 @@ const submitForm = async () => {
              @click="mainStore.showLogin">
             Back to login
           </p>
-          <p v-else-if="mainStore.popupType.signup">
+          <p class="pop-up__alt-link" v-else-if="mainStore.popupType.signup" @click="mainStore.showLogin">
             Already have an account?
-            <span class="pop-up__alt-link" @click="mainStore.showLogin">Login!</span>
           </p>
 
         </div>

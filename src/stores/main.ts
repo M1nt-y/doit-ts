@@ -4,6 +4,7 @@ import type User from '@/types/User'
 
 export const useMainStore = defineStore('Main', {
     state: () => ({
+        isActive: false,
         windowWidth: window.innerWidth,
         showBackdrop: false,
         showMenu: false,
@@ -300,10 +301,16 @@ export const useMainStore = defineStore('Main', {
         showLogin() {
             this.showBackdrop = this.showPopup = this.popupType.login = true
             this.popupType.signup = this.popupType.signupNext = this.popupType.signupDone = this.popupType.forgotPass = this.popupType.reportScores = false
+            if (this.showMenu) {
+                this.headerIndex = 1
+            }
         },
         showSignup() {
             this.showBackdrop = this.showPopup = this.popupType.signup = true
             this.popupType.login = this.popupType.signupNext = this.popupType.signupDone = this.popupType.forgotPass = this.popupType.reportScores = false
+            if (this.showMenu) {
+                this.headerIndex = 1
+            }
         },
         showNext() {
             this.showBackdrop = this.showPopup = this.popupType.signupNext = true
@@ -320,17 +327,30 @@ export const useMainStore = defineStore('Main', {
         showReport() {
             this.showBackdrop = this.showPopup = this.popupType.reportScores = true
             this.popupType.login = this.popupType.signup = this.popupType.signupNext = this.popupType.signupDone = this.popupType.forgotPass = false
+            if (this.showMenu) {
+                this.headerIndex = 1
+            }
         },
 
         // close pop-ups
         closeAll() {
-            this.showBackdrop = this.showMenu = this.showPopup = false
-            this.headerIndex = 1
+            if (this.showPopup && this.showMenu) {
+                this.showPopup = false
+                this.headerIndex = 2
+            }
+            else {
+                this.showBackdrop = this.showMenu = this.showPopup = false
+                this.headerIndex = 1
+            }
+
         },
         closePopup() {
             this.showPopup = this.popupType.login = this.popupType.signup = this.popupType.signupNext = this.popupType.signupDone = this.popupType.forgotPass = this.popupType.reportScores = false
             if (!this.showMenu) {
                 this.showBackdrop = false
+            }
+            else {
+                this.headerIndex = 2
             }
         },
 

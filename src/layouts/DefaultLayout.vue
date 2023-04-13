@@ -4,9 +4,19 @@ import TheHeader from '@/components/TheHeader.vue'
 import TheBackdrop from '@/components/TheBackdrop.vue'
 import PopUp from '@/components/PopUp.vue'
 import {useMainStore} from '@/stores/main'
+import {watch} from 'vue'
 
 
 const mainStore = useMainStore()
+
+watch(() => mainStore.showBackdrop, (value) => {
+  if (!value) {
+    document.documentElement.style.overflowY = 'auto'
+  }
+  else {
+    document.documentElement.style.overflowY = 'hidden'
+  }
+})
 </script>
 
 <template>

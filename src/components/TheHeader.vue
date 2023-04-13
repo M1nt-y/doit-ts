@@ -12,7 +12,7 @@ const zIndex = computed(() => mainStore.headerIndex)
 </script>
 
 <template>
-  <header class="header">
+  <header class="header" :class="{'header--active': mainStore.showMenu}">
     <div class="container" v-if="!isBurger">
       <div class="header__menu" >
         <img class="header__menu-logo" src="../assets/logo.png" alt="">
@@ -61,7 +61,8 @@ const zIndex = computed(() => mainStore.headerIndex)
   position: fixed;
   z-index: v-bind(zIndex);
   top: 0;
-  width: 100%;
+  left: 0;
+  right: 0;
   color: #F5F5F5;
   background: #0F1215;
   padding: 32px 0;
@@ -69,7 +70,8 @@ const zIndex = computed(() => mainStore.headerIndex)
   font-weight: 700;
   font-size: 20px;
   line-height: 24px;
-  letter-spacing: 0.4px;
+  //letter-spacing: 0.4px;
+  margin-right: calc(-1 * (100vw - 100%));
 }
 .container {
   padding: 0;
@@ -125,8 +127,13 @@ const zIndex = computed(() => mainStore.headerIndex)
         margin-bottom: 0;
       }
     }
+    &--active {
+      overflow-y: scroll;
+      height: 100%;
+    }
     &__content {
       width: 100%;
+      max-width: 330px;
       margin-top: 17px;
       overflow-y: hidden;
       &-links {
