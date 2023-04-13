@@ -5,8 +5,10 @@ import { useMainStore } from '@/stores/main'
 const mainStore = useMainStore()
 
 const isBurger = computed(() => {
-  return mainStore.windowWidth <= 1250;
+  return mainStore.windowWidth <= 1260;
 })
+
+const zIndex = computed(() => mainStore.headerIndex)
 </script>
 
 <template>
@@ -30,24 +32,26 @@ const isBurger = computed(() => {
 
     <div class="container" v-else>
       <div class="header__menu">
-        <div class="header__burger">
+        <div class="header__burger" @click="mainStore.toggleMenu">
           <span/><span/><span/>
         </div>
         <img class="header__logo" src="../assets/logo.png" alt="">
       </div>
-      <div class="header__content">
-        <ul class="header__content-links">
-          <li class="header__content-link">Play</li>
-          <li class="header__content-link">News</li>
-          <li class="header__content-link">Games</li>
-          <li class="header__content-link">Shop</li>
-          <li class="header__content-link">Sponsorship</li>
-        </ul>
-        <div class="header__content-buttons">
-          <button class="button button-default button-block">Login</button>
-          <button class="button button-gradient button-block">Sign up</button>
+      <transition name="dropdown">
+        <div class="header__content" v-if="mainStore.showMenu">
+          <ul class="header__content-links">
+            <li class="header__content-link">Play</li>
+            <li class="header__content-link">News</li>
+            <li class="header__content-link">Games</li>
+            <li class="header__content-link">Shop</li>
+            <li class="header__content-link">Sponsorship</li>
+          </ul>
+          <div class="header__content-buttons">
+            <button class="button button-default" @click="mainStore.showLogin">Login</button>
+            <button class="button button-gradient" @click="mainStore.showSignup">Sign up</button>
+          </div>
         </div>
-      </div>
+      </transition>
     </div>
   </header>
 </template>
@@ -55,7 +59,7 @@ const isBurger = computed(() => {
 <style scoped lang="scss">
 .header {
   position: fixed;
-  z-index: 1;
+  z-index: v-bind(zIndex);
   top: 0;
   width: 100%;
   color: #F5F5F5;
@@ -88,55 +92,62 @@ const isBurger = computed(() => {
   }
 }
 
+.dropdown-enter-from { max-height: 0 }
+.dropdown-enter-to { max-height: 400px }
+.dropdown-enter-active { transition: max-height .4s }
+.dropdown-leave-from { max-height: 400px }
+.dropdown-leave-to { max-height: 0 }
+.dropdown-leave-active { transition: max-height .4s }
 
-
-@media screen and (max-width: 1250px) {
+@media screen and (max-width: 1260px) {
   .container {
     flex-direction: column;
   }
-  .header__menu {
-    width: 100%;
-    justify-content: space-between;
-  }
-  .header__burger {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    height: 32px;
-    padding: 4px;
-    & span {
-      height: 2.67px;
-      width: 24px;
-      background: #F5F5F5;
-      margin-bottom: 4px;
+  .header {
+    padding: 24px 0;
+    &__menu {
+      width: 100%;
+      justify-content: space-between;
     }
-    & span:nth-last-child(1) {
-      margin-bottom: 0;
-    }
-  }
-  .header__content {
-    width: 100%;
-    margin-top: 17px;
-    transition: height 0.4s;
-    height: 0;
-    overflow: hidden;
-    &-links {
-      text-align: center;
-    }
-    &-link {
-      line-height: 100%;
-      margin-bottom: 30px;
-    }
-    &-link:nth-last-child(1) {
-      margin-bottom: 0;
-    }
-    &-buttons {
+    &__burger {
       display: flex;
       flex-direction: column;
+      justify-content: center;
+      height: 32px;
+      padding: 4px;
+      & span {
+        height: 2.67px;
+        width: 24px;
+        background: #F5F5F5;
+        margin-bottom: 4px;
+      }
+      & span:nth-last-child(1) {
+        margin-bottom: 0;
+      }
+    }
+    &__content {
       width: 100%;
-      margin-top: 84px;
+      margin-top: 17px;
+      overflow-y: hidden;
+      &-links {
+        text-align: center;
+      }
+      &-link {
+        line-height: 100%;
+        margin-bottom: 30px;
+      }
+      &-link:nth-last-child(1) {
+        margin-bottom: 0;
+      }
+      &-buttons {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        margin-top: 84px;
+      }
     }
   }
+
   .button-default {
     margin-right: 0;
     margin-bottom: 12px;

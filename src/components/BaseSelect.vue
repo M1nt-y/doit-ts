@@ -64,7 +64,7 @@ function selectOption(option: string) {
         v-model="mainStore.customSelect.input"
         :class="{'input--error': errors && errors.length > 0}"
     />
-    <transition name="options">
+    <transition name="dropdown">
       <div class="options-wrapper" v-if="mainStore.customSelect.active">
         <ul class="options">
           <li class="option option--disabled" v-if="optionsFound.length === 0">There are no matches</li>
@@ -143,10 +143,10 @@ function selectOption(option: string) {
   }
 }
 
-.options-enter-from { max-height: 0 }
-.options-enter-to { max-height: 240px }
-.options-enter-active { transition: max-height .4s }
-.options-leave-from { max-height: 240px }
-.options-leave-to { max-height: 0 }
-.options-leave-active { transition: max-height .4s }
+.dropdown-enter-from { max-height: 0 }
+.dropdown-enter-to { max-height: 240px }
+.dropdown-enter-active { transition: max-height .4s }
+.dropdown-leave-from { max-height: 240px }
+.dropdown-leave-to { max-height: 0 }
+.dropdown-leave-active { transition: max-height .4s }
 </style>

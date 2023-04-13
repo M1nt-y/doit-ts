@@ -12,9 +12,7 @@ const mainStore = useMainStore()
 <template>
   <TheHeader />
   <FixedNavigation />
-  <transition name="fade">
-    <TheBackdrop v-if="mainStore.showBackdrop" />
-  </transition>
+  <TheBackdrop v-if="mainStore.showBackdrop" />
   <transition name="fade">
     <PopUp v-if="mainStore.showPopup" />
   </transition>

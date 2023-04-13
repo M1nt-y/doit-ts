@@ -6,6 +6,8 @@ export const useMainStore = defineStore('Main', {
     state: () => ({
         windowWidth: window.innerWidth,
         showBackdrop: false,
+        showMenu: false,
+        headerIndex: 1,
         showPopup: false,
         popupType: {
             login: false,
@@ -284,6 +286,16 @@ export const useMainStore = defineStore('Main', {
             this.windowWidth = window.innerWidth
         },
 
+        toggleMenu() {
+            this.showBackdrop = this.showMenu = !this.showMenu
+            if (this.headerIndex === 1) {
+                this.headerIndex = 2
+            }
+            else {
+                this.headerIndex = 1
+            }
+        },
+
         // display pop-ups
         showLogin() {
             this.showBackdrop = this.showPopup = this.popupType.login = true
@@ -312,10 +324,14 @@ export const useMainStore = defineStore('Main', {
 
         // close pop-ups
         closeAll() {
-            this.showBackdrop = this.showPopup = false
+            this.showBackdrop = this.showMenu = this.showPopup = false
+            this.headerIndex = 1
         },
         closePopup() {
-            this.showBackdrop = this.showPopup = this.popupType.login = this.popupType.signup = this.popupType.signupNext = this.popupType.signupDone = this.popupType.forgotPass = this.popupType.reportScores = false
+            this.showPopup = this.popupType.login = this.popupType.signup = this.popupType.signupNext = this.popupType.signupDone = this.popupType.forgotPass = this.popupType.reportScores = false
+            if (!this.showMenu) {
+                this.showBackdrop = false
+            }
         },
 
 
