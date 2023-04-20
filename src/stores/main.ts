@@ -1,6 +1,4 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
-import type User from '@/types/User'
 
 export const useMainStore = defineStore('Main', {
     state: () => ({
@@ -17,16 +15,6 @@ export const useMainStore = defineStore('Main', {
             signupDone: false,
             forgotPass: false,
             reportScores: false
-        },
-        formData: {
-            login: '',
-            email: '',
-            username: '',
-            password: '',
-            country: '',
-            day: '',
-            month: '',
-            year: ''
         },
         customSelect: {
           active: false,
@@ -277,10 +265,7 @@ export const useMainStore = defineStore('Main', {
             {name: 'Yemen', code: 'YE'},
             {name: 'Zambia', code: 'ZM'},
             {name: 'Zimbabwe', code: 'ZW'}
-        ],
-        currentUser: undefined as User | undefined,
-        jwt: null,
-        singleError: ''
+        ]
     }),
     actions: {
         onWidthChange() {
@@ -291,8 +276,7 @@ export const useMainStore = defineStore('Main', {
             this.showBackdrop = this.showMenu = !this.showMenu
             if (this.headerIndex === 1) {
                 this.headerIndex = 2
-            }
-            else {
+            } else {
                 this.headerIndex = 1
             }
         },
@@ -300,119 +284,74 @@ export const useMainStore = defineStore('Main', {
         // display pop-ups
         showLogin() {
             this.showBackdrop = this.showPopup = this.popupType.login = true
-            this.popupType.signup = this.popupType.signupNext = this.popupType.signupDone = this.popupType.forgotPass = this.popupType.reportScores = false
+            this.popupType.signup = this.popupType.forgotPass = false
             if (this.showMenu) {
                 this.headerIndex = 1
             }
         },
         showSignup() {
             this.showBackdrop = this.showPopup = this.popupType.signup = true
-            this.popupType.login = this.popupType.signupNext = this.popupType.signupDone = this.popupType.forgotPass = this.popupType.reportScores = false
+            this.popupType.login = false
             if (this.showMenu) {
                 this.headerIndex = 1
             }
         },
         showNext() {
             this.showBackdrop = this.showPopup = this.popupType.signupNext = true
-            this.popupType.login = this.popupType.signup = this.popupType.signupDone = this.popupType.forgotPass = this.popupType.reportScores = false
+            this.popupType.signup = false
         },
         showDone() {
             this.showBackdrop = this.showPopup = this.popupType.signupDone = true
-            this.popupType.login = this.popupType.signup = this.popupType.signupNext = this.popupType.forgotPass = this.popupType.reportScores = false
+            this.popupType.signupNext = false
         },
         showForgot() {
             this.showBackdrop = this.showPopup = this.popupType.forgotPass = true
-            this.popupType.login = this.popupType.signup = this.popupType.signupNext = this.popupType.signupDone = this.popupType.reportScores = false
+            this.popupType.login = false
         },
         showReport() {
             this.showBackdrop = this.showPopup = this.popupType.reportScores = true
-            this.popupType.login = this.popupType.signup = this.popupType.signupNext = this.popupType.signupDone = this.popupType.forgotPass = false
-            if (this.showMenu) {
-                this.headerIndex = 1
-            }
+            // this.popupType.login = this.popupType.signup = this.popupType.signupNext = this.popupType.signupDone = this.popupType.forgotPass = false
+            // if (this.showMenu) {
+            //     this.headerIndex = 1
+            // }
         },
 
-        // close pop-ups
-        closeAll() {
-            if (this.showPopup && this.showMenu) {
-                this.showPopup = false
-                this.headerIndex = 2
-            }
-            else {
-                this.showBackdrop = this.showMenu = this.showPopup = false
-                this.headerIndex = 1
-            }
-
-        },
         closePopup() {
-            this.showPopup = this.popupType.login = this.popupType.signup = this.popupType.signupNext = this.popupType.signupDone = this.popupType.forgotPass = this.popupType.reportScores = false
+            this.showPopup = this.popupType.login = this.popupType.signup = this.popupType.signupNext = this.popupType.signupDone = this.popupType.forgotPass = this.popupType.reportScores = this.customSelect.active = false
+            this.customSelect.input = this.customSelect.selected = ''
             if (!this.showMenu) {
                 this.showBackdrop = false
-            }
-            else {
+            } else {
                 this.headerIndex = 2
             }
         },
-
-
-        // api requests
-        async login() {
-            await axios.post('/api/auth/local', {
-                identifier: this.formData.login,
-                password: this.formData.password,
-            }).then(response => {
-                this.currentUser = response.data.user
-                this.jwt = response.data.jwt
-            }).catch(error => {
-                console.log('An error occurred:', error.response)
-            });
-        },
-
-        async signup() {
-            await axios.post('/api/auth/local/register', {
-                username: 'admin@doit.gg',
-                email: 'admin@doit.gg',
-                password: 'password',
-            }).then(response => {
-                this.singleError = ''
-                this.currentUser = response.data.user
-                this.jwt = response.data.jwt
-            }).catch(error => {
-                if (error.response.data.error.message.includes('already taken')) {
-                    this.singleError = 'Email is already taken'
-                } else {
-                    console.log('An error occurred:', error.response)
-                    this.singleError = 'Other error'
-                }
-            })
-        },
-
-        async continueSignup() {
-            // await axios.get('/api/users/me', {
-            //     headers: {
-            //         Authorization: `Bearer ${this.jwt}`,
-            //     }
-            // }).then(response => {
-            //     console.log(response)
-            // }).catch(error => {
-            //     console.log(error)
-            // })
-            if (this.currentUser) {
-                await axios.put(`/api/users/${this.currentUser.id}`,
-                    {
-                        username: this.formData.username,
-                        birthdate: this.formData.year + '-' + this.formData.month + '-' + this.formData.day,
-                        country: this.formData.country
-                    },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${this.jwt}`,
-                        },
-                    }).then(response => {
-                        console.log(response.data)
-                })
+        closeAll() {
+            if (this.showPopup && this.showMenu) {
+                this.headerIndex = 2
+            } else {
+                this.showBackdrop = this.showMenu = false
+                this.headerIndex = 1
             }
-        }
+            this.closePopup()
+        },
+
+        // async updateUser() {
+        //     if (this.currentUser) {
+        //         await axios.put(`/api/users/${this.currentUser.id}`,
+        //             {
+        //                 username: this.formData.username,
+        //                 birthdate: this.formData.year + '-' + this.formData.month + '-' + this.formData.day,
+        //                 country: this.formData.country
+        //             },
+        //             {
+        //                 headers: {
+        //                     Authorization: `Bearer ${this.jwt}`,
+        //                 },
+        //             }).then(response => {
+        //                 console.log(response.data)
+        //         })
+        //     }
+        // }
 
 
     }

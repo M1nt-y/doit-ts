@@ -60,6 +60,7 @@ function selectOption(option: string) {
     <p class="select-wrapper__label">{{ label }}</p>
     <input
         class="input" type="text"
+        @input="mainStore.customSelect.active = true"
         @click="toggleSelect" v-bind="$attrs"
         v-model="mainStore.customSelect.input"
         :class="{'input--error': errors && errors.length > 0}"
