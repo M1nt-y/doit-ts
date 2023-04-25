@@ -1,11 +1,22 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useMainStore } from '@/stores/main'
+import { useAuthStore } from '@/stores/auth'
+import ProfileBar from "@/components/ProfileBar.vue";
+
 
 const mainStore = useMainStore()
+const authStore = useAuthStore()
+
+const { currentUser } = storeToRefs(authStore)
 
 const isBurger = computed(() => {
-  return mainStore.windowWidth <= 1260;
+  return mainStore.windowWidth <= 1260
+})
+
+const displayProfile = computed(() => {
+  return mainStore.windowWidth > 500
 })
 
 const zIndex = computed(() => mainStore.headerIndex)
@@ -13,46 +24,44 @@ const zIndex = computed(() => mainStore.headerIndex)
 
 <template>
   <header class="header" :class="{'header--active': mainStore.showMenu}">
-    <div class="container" v-if="!isBurger">
-      <div class="header__menu" >
+    <div class="container">
+      <div class="header__menu">
         <img class="header__menu-logo" src="../assets/logo.png" alt="">
-        <div class="header__nav">
+        <div class="header__nav" v-if="!isBurger">
           <div class="header__nav-item">Play</div>
           <div class="header__nav-item">News</div>
           <div class="header__nav-item">Games</div>
           <div class="header__nav-item">Shop</div>
           <div class="header__nav-item">Sponsorship</div>
         </div>
-      </div>
-      <div class="header__buttons">
-        <button class="button button-default" @click="mainStore.showLogin">Login</button>
-        <button class="button button-gradient" @click="mainStore.showSignup">Sign up</button>
-      </div>
-    </div>
-
-    <div class="container" v-else>
-      <div class="header__menu">
-        <div class="header__burger" @click="mainStore.toggleMenu">
+        <div class="header__burger" @click="mainStore.toggleMenu" v-else>
           <span/><span/><span/>
         </div>
-        <img class="header__logo" src="../assets/logo.png" alt="">
       </div>
-      <transition name="dropdown">
-        <div class="header__content" v-if="mainStore.showMenu">
-          <ul class="header__content-links">
-            <li class="header__content-link">Play</li>
-            <li class="header__content-link">News</li>
-            <li class="header__content-link">Games</li>
-            <li class="header__content-link">Shop</li>
-            <li class="header__content-link">Sponsorship</li>
-          </ul>
-          <div class="header__content-buttons">
-            <button class="button button-default" @click="mainStore.showLogin">Login</button>
-            <button class="button button-gradient" @click="mainStore.showSignup">Sign up</button>
-          </div>
+      <div class="header__wrapper" v-if="displayProfile">
+        <ProfileBar v-if="currentUser" />
+        <div class="header__buttons" v-else>
+          <button class="button button-default" @click="mainStore.showLogin">Login</button>
+          <button class="button button-gradient" @click="mainStore.showSignup">Sign up</button>
         </div>
-      </transition>
+      </div>
     </div>
+    <transition name="dropdown">
+      <div class="header__content" v-if="mainStore.showMenu">
+        <ul class="header__content-links">
+          <li class="header__content-link">Play</li>
+          <li class="header__content-link">News</li>
+          <li class="header__content-link">Games</li>
+          <li class="header__content-link">Shop</li>
+          <li class="header__content-link">Sponsorship</li>
+          <li class="header__content-link" v-if="currentUser && !displayProfile">Profile</li>
+        </ul>
+        <div class="header__content-buttons" v-if="!currentUser && !displayProfile">
+          <button class="button button-default" @click="mainStore.showLogin">Login</button>
+          <button class="button button-gradient" @click="mainStore.showSignup">Sign up</button>
+        </div>
+      </div>
+    </transition>
   </header>
 </template>
 
@@ -102,15 +111,8 @@ const zIndex = computed(() => mainStore.headerIndex)
 .dropdown-leave-active { transition: max-height .4s }
 
 @media screen and (max-width: 1260px) {
-  .container {
-    flex-direction: column;
-  }
   .header {
     padding: 24px 0;
-    &__menu {
-      width: 100%;
-      justify-content: space-between;
-    }
     &__burger {
       display: flex;
       flex-direction: column;
@@ -134,7 +136,7 @@ const zIndex = computed(() => mainStore.headerIndex)
     &__content {
       width: 100%;
       max-width: 330px;
-      margin-top: 17px;
+      margin: 17px auto 0;
       overflow-y: hidden;
       &-links {
         text-align: center;
@@ -154,21 +156,24 @@ const zIndex = computed(() => mainStore.headerIndex)
       }
     }
   }
-
-  .button-default {
-    margin-right: 0;
-    margin-bottom: 12px;
-  }
 }
 @media screen and (max-width: 768px) {
   .header {
     padding: 15px 0;
   }
 }
-@media screen and (max-width: 425px) {
-  .header__logo {
-    width: 56px;
-    height: 48px;
+@media screen and (max-width: 500px) {
+  .header__menu {
+    width: 100%;
+    justify-content: space-between;
+    &-logo {
+      width: 56px;
+      height: 48px;
+    }
+  }
+  .button-default {
+    margin-right: 0;
+    margin-bottom: 12px;
   }
 }
 </style>
