@@ -6,6 +6,7 @@ export const useMainStore = defineStore('Main', {
         windowWidth: window.innerWidth,
         showBackdrop: false,
         showMenu: false,
+        profileExpanded: false,
         headerIndex: 1,
         showPopup: false,
         popupType: {
@@ -279,6 +280,13 @@ export const useMainStore = defineStore('Main', {
             } else {
                 this.headerIndex = 1
             }
+        },
+
+        toggleProfile() {
+            this.profileExpanded = !this.profileExpanded
+            // if (this.showMenu) {
+            //     this.toggleMenu()
+            // }
         },
 
         // display pop-ups
