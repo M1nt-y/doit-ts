@@ -128,8 +128,8 @@
       transition: fill 0.3s;
     }
     &-icon:hover path{
-      fill: #2788F6;
-      //fill: #0960E0;
+      //fill: #2788F6;
+      fill: #0960E0;
     }
     &-icon:nth-last-child(1) {
       margin-bottom: 0;
@@ -148,26 +148,12 @@
     &__nav {
       flex-direction: row;
       &-icon {
-        height: 48px;
+        height: 32px;
         margin-bottom: 0;
-        margin-right: 11.2%;
+        margin-right: 12.245%;
       }
       &-icon:nth-last-child(1) {
         margin-right: 0;
-      }
-      &-icon svg {
-        height: 48px;
-        width: 48px;
-      }
-    }
-  }
-}
-@media screen and (max-width: 768px) {
-  .sidebar {
-    &__nav {
-      &-icon {
-        height: 32px;
-        //margin-right: 42px;
       }
       &-icon svg {
         height: 32px;
@@ -176,13 +162,12 @@
     }
   }
 }
-@media screen and (max-width: 425px) {
+@media screen and (max-width: 500px) {
   .sidebar {
     padding: 16px;
     &__nav {
       &-icon {
         height: 22px;
-        margin-right: 42px;
       }
       &-icon svg {
         height: 22px;

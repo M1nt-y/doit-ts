@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useMainStore } from "@/stores/main"
+import {storeToRefs} from 'pinia'
+import { useMainStore } from '@/stores/main'
+import {useAuthStore} from '@/stores/auth'
 
-const mainStore = useMainStore();
+
+const mainStore = useMainStore()
+const authStore = useAuthStore()
+
+const { currentUser } = storeToRefs(authStore)
 
 const display = computed(() => {
   return mainStore.windowWidth < 730;
@@ -11,7 +17,7 @@ const display = computed(() => {
 
 <template>
   <div class="container">
-    <div class="first-screen">
+    <div class="first-screen" v-if="!currentUser">
       <svg class="first-screen__triangles" width="1040" height="793" viewBox="0 0 1040 793" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g opacity="0.32" filter="url(#filter0_d_511_229)">
           <path d="M531.241 774.837L6.81946 32.9061L1010.65 3.0549L531.241 774.837Z" stroke="url(#paint0_linear_511_229)" stroke-width="2"/>
