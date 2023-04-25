@@ -23,7 +23,7 @@
     "lib": ["ESNext", "DOM", "WebWorker"],
     "types": [
       "vite-plugin-pwa/client",
-      "pinia-plugin-persist"
+      "pinia-plugin-persistedstate"
     ]
   },
 
