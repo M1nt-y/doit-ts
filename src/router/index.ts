@@ -12,6 +12,11 @@ const router = createRouter({
       component: () => import("@/pages/HomePage.vue"),
     },
     {
+      path: "/profile",
+      name: RouteNamesEnum.profile,
+      component: () => import("@/pages/ProfilePage.vue"),
+    },
+    {
       path: "/login",
       name: RouteNamesEnum.login,
       component: () => import("@/pages/LoginPage.vue"),

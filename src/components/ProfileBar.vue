@@ -2,6 +2,8 @@
 import { useMainStore } from '@/stores/main'
 
 const mainStore = useMainStore()
+
+const mainLinks = ['My profile', 'My team', 'Withdraw', 'Deposit', 'Premium', 'Statistics']
 </script>
 
 <template>
@@ -24,16 +26,13 @@ const mainStore = useMainStore()
           <div class="profile-bar__dropdown-icons"></div>
         </div>
         <ul class="profile-bar__dropdown-main">
-          <li class="profile-bar__dropdown-link">My profile</li>
-          <li class="profile-bar__dropdown-link">My team</li>
-          <li class="profile-bar__dropdown-link">Withdraw</li>
-          <li class="profile-bar__dropdown-link">Deposit</li>
-          <li class="profile-bar__dropdown-link">Premium</li>
-          <li class="profile-bar__dropdown-link">Statistics</li>
+          <li class="profile-bar__dropdown-link" v-for="(link, index) in mainLinks" :key="index">
+            <RouterLink :to="{ name: 'profile', query: { 'q': link } }">{{ link }}</RouterLink>
+          </li>
         </ul>
         <div class="profile-bar__dropdown-bot">
-          <p class="profile-bar__dropdown-link">Support</p>
-          <p class="profile-bar__dropdown-link">Settings</p>
+          <RouterLink class="profile-bar__dropdown-link" :to="{ name: 'profile', query: { 'q': 'Support' } }">Support</RouterLink>
+          <RouterLink class="profile-bar__dropdown-link" :to="{ name: 'profile', query: { 'q': 'Settings' } }">Settings</RouterLink>
           <p class="profile-bar__dropdown-link">Logout</p>
         </div>
       </div>
@@ -123,6 +122,10 @@ const mainStore = useMainStore()
     &-link {
       margin-bottom: 16px;
     }
+    &-link a {
+      color: inherit;
+      text-decoration: none;
+    }
     &-link:nth-last-child(1) {
       margin-bottom: 0;
     }
@@ -135,7 +138,9 @@ const mainStore = useMainStore()
       line-height: 100%;
       justify-content: space-between;
       & .profile-bar__dropdown-link {
+        color: inherit;
         margin-bottom: 0;
+        text-decoration: none;
       }
     }
   }

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRoute } from 'vue-router'
 import { useMainStore } from '@/stores/main'
 import { useAuthStore } from '@/stores/auth'
-import ProfileBar from "@/components/ProfileBar.vue";
+import ProfileBar from '@/components/ProfileBar.vue'
 
 
+const route = useRoute()
 const mainStore = useMainStore()
 const authStore = useAuthStore()
 
@@ -16,7 +18,7 @@ const isBurger = computed(() => {
 })
 
 const displayProfile = computed(() => {
-  return mainStore.windowWidth > 500
+  return mainStore.windowWidth > 500 && route.name !== 'profile'
 })
 
 const zIndex = computed(() => mainStore.headerIndex)
@@ -79,7 +81,6 @@ const zIndex = computed(() => mainStore.headerIndex)
   font-weight: 700;
   font-size: 20px;
   line-height: 24px;
-  //letter-spacing: 0.4px;
   margin-right: calc(-1 * (100vw - 100%));
 }
 .container {
