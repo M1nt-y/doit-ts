@@ -1,14 +1,27 @@
-interface User {
+type GameProfile = {
+    riot: string,
+    battlenet: string,
+    steam: string
+}
+
+type User = {
+    balance: number,
     birthdate: string,
     blocked: boolean,
     confirmed: boolean,
     country: string,
     createdAt: string,
     email: string,
+    gameProfile: GameProfile | null,
+    gender: string,
+    fullName: string,
     id: number,
+    level: number,
+    mainTeam: string,
     provider: string,
+    teams: [],
     updatedAt: string,
     username: string
 }
 
-export default User
+export type { User, GameProfile, }

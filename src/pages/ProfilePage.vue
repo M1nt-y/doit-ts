@@ -1,18 +1,25 @@
 <script setup lang="ts">
-import { watch, onMounted } from 'vue'
+import axios from 'axios'
 import { storeToRefs } from 'pinia'
-// import { useAuthStore } from '@/stores/auth'
-import { useProfileStore } from '@/stores/profile'
+import {useMainStore} from '@/stores/main'
+import { useAuthStore } from '@/stores/auth'
+import { useVuelidate } from '@vuelidate/core'
+import { watch, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useProfileStore } from '@/stores/profile'
+import BaseInput from '@/components/BaseInput.vue'
+import BaseSelect from '@/components/BaseSelect.vue'
+import { between, helpers, maxValue, required } from '@vuelidate/validators'
 
 
-// const authStore = useAuthStore()
-// const { currentUser } = storeToRefs(authStore)
-// const { token } = authStore
+const mainStore = useMainStore()
+
+const authStore = useAuthStore()
+const { token, currentUser, getProfile } = authStore
 
 
 const profileStore = useProfileStore()
-const { currentPage } = storeToRefs(profileStore)
+const { currentPage, formData, singleError, gameProfile, } = storeToRefs(profileStore)
 const { profilePages, userPanelButtons, settingsButtons } = profileStore
 function isActive(page: string) {
   return page === currentPage?.value
@@ -22,6 +29,21 @@ function isActive(page: string) {
 const route = useRoute()
 const router = useRouter()
 onMounted(() => {
+  getProfile().then(() => {
+    if (currentUser) {
+      if (currentUser.gameProfile !== null) {
+        gameProfile.value = currentUser.gameProfile
+      } else {
+        gameProfile.value = {
+          riot: '',
+          battlenet: '',
+          steam: ''
+        }
+      }
+    }
+  }).catch(error => {
+    console.log('An error occurred:', error.response)
+  })
   getUrlQueryParams()
 })
 async function getUrlQueryParams() {
@@ -47,18 +69,107 @@ function profileNavigation(goTo: string) {
     currentPage.value = goTo
   }
 }
+
+
+// const teams = computed(() => {
+//   if (currentUser && currentUser.teams) {
+//     return currentUser.teams
+//   }
+//   else
+//     return ['No team']
+// })
+
+const username = helpers.regex(/^([a-z0-9]|[-._](?![-._])){4,20}$/)
+
+const rules = computed(() => {
+  if (currentPage.value === 'Edit account details') {
+    return {
+      username: { required, username },
+      fullName: { required },
+      country: { required },
+      // mainTeam: {  },
+      // gender: { required },
+      day: { required, maxValue: maxValue(31) },
+      month: { required, maxValue: maxValue(12) },
+      year: { required, betweenValue: between(1900, 2010) }
+    }
+  }
+  else {
+    return ''
+  }
+})
+
+const v$ = useVuelidate(rules, formData)
+
+const submitForm = async () => {
+  const results = await v$.value.$validate()
+  if (results) {
+    await changeDetails()
+  }
+}
+
+const birthdateError = computed(() => {
+  if (v$.value.day?.$errors[0]?.$message === 'Value is required'|| v$.value.month?.$errors[0]?.$message === 'Value is required' || v$.value.year?.$errors[0]?.$message === 'Value is required') {
+    return 'Value is required'
+  }
+  else if (v$.value.day?.$errors[0]?.$message === 'The maximum value allowed is 31' || v$.value.month?.$errors[0]?.$message === 'The maximum value allowed is 12' || v$.value.year?.$errors[0]?.$message === 'The value must be between 1900 and 2010') {
+    return 'Invalid date'
+  }
+  else {
+    return ''
+  }
+})
+
+async function changeDetails() {
+  if (currentUser) {
+    await axios.put(`/api/users/${currentUser.id}`,
+        {
+          username: formData.value.username,
+          fullName: formData.value.fullName,
+          country: formData.value.country,
+          birthdate: formData.value.year + '-' + formData.value.month + '-' + formData.value.day
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }).then(() => {
+      getProfile()
+    }).catch(error => {
+      console.log('An error occurred:', error.response)
+    })
+  }
+}
+
+async function saveProfile() {
+  if (currentUser) {
+    await axios.put(`/api/users/${currentUser.id}`,
+        {
+          gameProfile: gameProfile.value
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }).then(() => {
+          getProfile()
+        }).catch(error => {
+          console.log('An error occurred:', error.response)
+        })
+  }
+}
 </script>
 
 <template>
-  <div class="profile">
+  <div class="profile" @click="mainStore.customSelect.active = false">
     <div class="profile__info">
       <div class="profile__info-wrapper">
         <div class="profile__info-pfp"></div>
         <div class="profile__info-content">
-          <p class="profile__info-name">Nikodem Świder</p>
-          <h2 class="profile__info-nickname">BlacerLordTV</h2>
-          <p class="profile__info-team">Blacer team</p>
-          <p class="profile__info-balance">Balance: </p>
+          <p class="profile__info-name">{{ currentUser.fullName }}</p>
+          <h2 class="profile__info-nickname">{{ currentUser.username }}</h2>
+          <p class="profile__info-team">{{ currentUser.mainTeam }}</p>
+          <p class="profile__info-balance">Balance: {{ currentUser.balance }} EUR</p>
           <div class="profile__info-icons"></div>
         </div>
       </div>
@@ -81,9 +192,116 @@ function profileNavigation(goTo: string) {
         <div class="profile__main-button" v-for="(button, index) in settingsButtons" :key="index" @click="profileNavigation(button)">{{ button }}</div>
       </div>
 
+
+      <div class="profile__main-content" v-else-if="currentPage === 'Edit account details'">
+        <div class="profile__main-form">
+
+          <BaseInput
+              :label="'Username'"
+              placeholder="Username"
+              v-model="formData.username"
+              :errors="v$?.username?.$errors"
+              :single-error="singleError"
+          />
+          <BaseInput
+              :label="'Full name'"
+              placeholder="Full name"
+              v-model="formData.fullName"
+              :errors="v$?.username?.$errors"
+          />
+          <BaseSelect
+              v-model="formData.country"
+              :options="mainStore.countries"
+              placeholder="Select country"
+              @click.stop :label="'Country'"
+              :errors="v$?.country?.$errors"
+          />
+
+          <!--     Main team select     -->
+
+          <!--     Gender select     -->
+
+          <!--     Make it as component     -->
+          <div class="birthdate">
+            <p class="birthdate__label">Date of birth</p>
+            <div class="birthdate__inputs">
+              <BaseInput
+                  placeholder="dd" type="number"
+                  v-model="formData.day"
+                  :errors="v$?.day?.$errors"
+                  :displayErrors="false"
+              />
+              <BaseInput
+                  placeholder="mm" type="number"
+                  v-model="formData.month"
+                  :errors="v$?.month?.$errors"
+                  :displayErrors="false"
+              />
+              <BaseInput
+                  placeholder="yyyy" type="number"
+                  v-model="formData.year"
+                  :errors="v$?.year?.$errors"
+                  :displayErrors="false"
+              />
+            </div>
+            <div class="birthdate__errors">
+              <p class="birthdate__error-message" v-if="birthdateError">{{ birthdateError }}</p>
+            </div>
+          </div>
+
+
+<!--          <BaseInput-->
+<!--              v-if="gameProfile"-->
+<!--              :label="'Riot Games account'"-->
+<!--              placeholder="Riot Games account"-->
+<!--              v-model="gameProfile.riot"-->
+<!--          />-->
+<!--          <BaseInput-->
+<!--              v-if="gameProfile"-->
+<!--              :label="'Battlenet account'"-->
+<!--              placeholder="Battlenet account"-->
+<!--              v-model="gameProfile.battlenet"-->
+<!--          />-->
+<!--          <BaseInput-->
+<!--              v-if="gameProfile"-->
+<!--              :label="'Steam account'"-->
+<!--              placeholder="Steam account"-->
+<!--              v-model="gameProfile.steam"-->
+<!--          />-->
+        </div>
+        <button class="profile__main-save" @click="submitForm">Change details</button>
+      </div>
+
+
       <div class="profile__main-controls" v-else-if="currentPage === 'My team'">
         <div class="profile__main-button" @click="profileNavigation('Create team')">Create team</div>
       </div>
+
+
+      <div class="profile__main-content" v-else-if="currentPage === 'Game profile'">
+        <div class="profile__main-form">
+          <BaseInput
+              v-if="gameProfile"
+              :label="'Riot Games account'"
+              placeholder="Riot Games account"
+              v-model="gameProfile.riot"
+          />
+          <BaseInput
+              v-if="gameProfile"
+              :label="'Battlenet account'"
+              placeholder="Battlenet account"
+              v-model="gameProfile.battlenet"
+          />
+          <BaseInput
+              v-if="gameProfile"
+              :label="'Steam account'"
+              placeholder="Steam account"
+              v-model="gameProfile.steam"
+          />
+        </div>
+        <button class="profile__main-save" @click="saveProfile">Save profile</button>
+      </div>
+
     </div>
   </div>
 </template>
@@ -220,6 +438,52 @@ function profileNavigation(goTo: string) {
     &-button:nth-child(3n),
     &-button:nth-last-child(1){
       margin-right: 0;
+    }
+    &-content {
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+    }
+    &-form {
+      width: 100%;
+      max-width: 600px;
+      padding: 44px 58px;
+      margin-bottom: 33px;
+      border: 1px solid #20252B;
+    }
+    &-save {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      font-family: 'Rubik', sans-serif;
+      font-style: normal;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 19px;
+      text-align: center;
+      color: #F5F5F5;
+      padding: 16px 32px;
+      background: #1A222D;
+    }
+  }
+}
+
+.birthdate {
+  //margin-bottom: 16px;
+  &__label {
+    font-family: 'Rubik', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 100%;
+    color: #FFFFFF;
+    margin-bottom: 6px;
+  }
+  &__inputs {
+    display: flex;
+    & .input-wrapper:nth-child(2) {
+      margin-left: 12px;
+      margin-right: 12px;
     }
   }
 }

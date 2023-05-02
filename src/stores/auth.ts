@@ -1,7 +1,7 @@
-import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type User from '@/types/User'
 import axios from 'axios'
+import { defineStore } from 'pinia'
+import type { User } from '@/types/User'
 
 export const useAuthStore = defineStore('Auth', () => {
     const currentUser = ref<User | undefined>(undefined)
@@ -83,5 +83,17 @@ export const useAuthStore = defineStore('Auth', () => {
         })
     }
 
-    return { currentUser, token, formData, singleError, login, checkEmail, signup, clearForm }
+    async function getProfile() {
+        await axios.get('/api/users/me?populate=*', {
+            headers: {
+                Authorization: `Bearer ${token.value}`,
+            },
+        }).then(response => {
+            currentUser.value = response.data
+        }).catch(error => {
+            console.log('An error occurred:', error.response)
+        })
+    }
+
+    return { currentUser, token, formData, singleError, clearForm, login, checkEmail, signup, getProfile }
 }, { persist: true })

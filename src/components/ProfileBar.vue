@@ -1,9 +1,27 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useMainStore } from '@/stores/main'
+import { useAuthStore } from '@/stores/auth'
 
 const mainStore = useMainStore()
+const authStore = useAuthStore()
+const { currentUser } = authStore
+
+const coin = computed(() => {
+  if (currentUser)
+    return Math.floor(currentUser.balance) / 10
+  else
+    return 0
+})
 
 const mainLinks = ['My profile', 'My team', 'Withdraw', 'Deposit', 'Premium', 'Statistics']
+
+const background = computed(() => {
+  if (mainStore.profileExpanded)
+    return '#161A1F'
+  else
+    return 'none'
+})
 </script>
 
 <template>
@@ -11,8 +29,8 @@ const mainLinks = ['My profile', 'My team', 'Withdraw', 'Deposit', 'Premium', 'S
     <div class="profile-bar__info">
       <div class="profile-bar__info-pfp"></div>
       <div class="profile-bar__info-text">
-        <p class="profile-bar__info-name">JohnsonBaby2020</p>
-        <p class="profile-bar__info-balance">160 EUR <span>/</span> 16 DTC</p>
+        <p class="profile-bar__info-name">{{ currentUser.username }}</p>
+        <p class="profile-bar__info-balance">{{ currentUser.balance }} EUR <span>/</span> {{ coin }} DTC</p>
       </div>
       <div class="profile-bar__info-toggle" @click="mainStore.toggleProfile"></div>
     </div>
@@ -20,7 +38,7 @@ const mainLinks = ['My profile', 'My team', 'Withdraw', 'Deposit', 'Premium', 'S
       <div class="profile-bar__dropdown" v-if="mainStore.profileExpanded">
         <div class="profile-bar__dropdown-top">
           <div class="profile-bar__dropdown-level">
-            <p>LVL 999</p>
+            <p>LVL {{ currentUser.level }}</p>
             <div class="profile-bar__dropdown-progress"></div>
           </div>
           <div class="profile-bar__dropdown-icons"></div>
@@ -45,8 +63,10 @@ const mainLinks = ['My profile', 'My team', 'Withdraw', 'Deposit', 'Premium', 'S
   width: 100%;
   max-width: 225px;
   position: relative;
-  background: #161A1F;
+  background: v-bind(background);
+  transition: all 0.6s ease;
   &__info {
+    width: 100%;
     padding: 8px;
     display: flex;
     align-items: center;
