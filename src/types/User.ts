@@ -18,6 +18,7 @@ type User = {
     id: number,
     level: number,
     mainTeam: string,
+    payments: [],
     provider: string,
     teams: [],
     updatedAt: string,

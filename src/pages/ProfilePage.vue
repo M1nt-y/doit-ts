@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import axios from 'axios'
 import { storeToRefs } from 'pinia'
-import {useMainStore} from '@/stores/main'
+import { useMainStore } from '@/stores/main'
 import { useAuthStore } from '@/stores/auth'
 import { useVuelidate } from '@vuelidate/core'
 import { watch, onMounted, computed } from 'vue'
@@ -19,7 +19,7 @@ const { token, currentUser, getProfile } = authStore
 
 
 const profileStore = useProfileStore()
-const { currentPage, formData, singleError, gameProfile, } = storeToRefs(profileStore)
+const { currentPage, paymentPage, formData, singleError, gameProfile, } = storeToRefs(profileStore)
 const { profilePages, userPanelButtons, settingsButtons } = profileStore
 function isActive(page: string) {
   return page === currentPage?.value
@@ -49,27 +49,77 @@ onMounted(() => {
 async function getUrlQueryParams() {
   await router.isReady()
   if (route.query.q) {
-    currentPage.value = route.query.q.toString()
-  }
-  else {
+    if (route.query.q === 'Deposit' || route.query.q === 'Withdraw' || route.query.q === 'History') {
+      currentPage.value = 'Deposit/Withdraw'
+      paymentPage.value = route.query.q.toString() as string
+    } else {
+      currentPage.value = route.query.q.toString()
+    }
+  } else {
     await router.push({ query: { 'q': currentPage.value } })
   }
 }
 watch(() => currentPage.value, () => {
-  router.push({ query: { 'q': currentPage.value } })
+  if (currentPage.value === 'Deposit/Withdraw') {
+    router.push({ query: { 'q': paymentPage.value } })
+  } else {
+    router.push({ query: { 'q': currentPage.value } })
+  }
+})
+watch(() => paymentPage.value, () => {
+  router.push({ query: { 'q': paymentPage.value } })
 })
 watch(() => route.query.q, () => {
-  if (currentPage.value !== route.query.q) {
-    currentPage.value = route.query.q?.toString() as string
+  if (route.query.q) {
+    if (currentPage.value !== route.query.q) {
+      if (route.query.q === 'Deposit' || route.query.q === 'Withdraw' || route.query.q === 'History') {
+        currentPage.value = 'Deposit/Withdraw'
+        paymentPage.value = route.query.q.toString() as string
+      } else {
+        currentPage.value = route.query.q.toString() as string
+      }
+    }
   }
 })
 
 function profileNavigation(goTo: string) {
   if (goTo !== 'Logout') {
-    currentPage.value = goTo
+    if (goTo === 'Deposit' || goTo === 'Withdraw' || goTo === 'History') {
+      currentPage.value = 'Deposit/Withdraw'
+      paymentPage.value = goTo
+    } else {
+      currentPage.value = goTo
+    }
+  } else {
+    console.log('Logout')
   }
 }
 
+
+const registrationDate = () => {
+  if (currentUser) {
+    let date = new Date(currentUser.createdAt)
+    let d = date.getDate()
+    let m = date.getMonth() + 1
+    return (d <= 9 ? '0' + d : d) + '/' + (m<=9 ? '0' + m : m) + '/' + date.getFullYear()
+  }
+  else
+    return ''
+}
+const userAge = computed(() => {
+  if (currentUser) {
+    let today = new Date()
+    let birthDate = new Date(currentUser.birthdate)
+    let age = today.getFullYear() - birthDate.getFullYear()
+    let month = today.getMonth() - birthDate.getMonth()
+    if (month < 0 || (month === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    return age
+  }
+  else
+    return 0
+})
 
 // const teams = computed(() => {
 //   if (currentUser && currentUser.teams) {
@@ -184,14 +234,106 @@ async function saveProfile() {
     </div>
     <div class="profile__main">
       <h1 class="profile__main-title">{{ currentPage }}</h1>
+
+
       <div class="profile__main-controls" v-if="currentPage === 'User panel'">
         <div class="profile__main-button" v-for="(button, index) in userPanelButtons" :key="index" @click="profileNavigation(button)">{{ button }}</div>
       </div>
 
+      <div class="" v-else-if="currentPage === 'My profile'">
+
+        <table class="profile__main-table">
+          <tr>
+            <td class="profile__main-name">ID</td>
+            <td>{{ currentUser.id }}</td>
+          </tr>
+          <tr>
+            <td class="profile__main-name">Name</td>
+            <td>{{ currentUser.fullName }}</td>
+          </tr>
+          <tr>
+            <td class="profile__main-name">Username</td>
+            <td>{{ currentUser.username }}</td>
+          </tr>
+          <tr>
+            <td class="profile__main-name">With us from</td>
+            <td>{{ registrationDate() }}</td>
+          </tr>
+          <tr>
+            <td class="profile__main-name">Gender / Age</td>
+            <td>{{ currentUser.gender }} / {{ userAge }}</td>
+          </tr>
+
+          <!--     Need nationality?     -->
+<!--          <tr>-->
+<!--            <td class="profile__main-name">Nationality</td>-->
+<!--            <td>Person 2</td>-->
+<!--          </tr>-->
+
+          <tr>
+            <td class="profile__main-name">Country</td>
+            <td>{{ currentUser.country }}</td>
+          </tr>
+          <!--     Need website?     -->
+<!--          <tr>-->
+<!--            <td class="profile__main-name">Website</td>-->
+<!--            <td>Person 2</td>-->
+<!--          </tr>-->
+        </table>
+
+
+
+
+      </div>
+
+      <div class="profile__main-controls" v-else-if="currentPage === 'My team'">
+        <div class="profile__main-button" @click="profileNavigation('Create team')">Create team</div>
+      </div>
+
+      <!--   Teams related pages   -->
+
+
+
+      <div class="profile__main-payments" v-else-if="currentPage === 'Deposit/Withdraw'">
+        <div class="info">
+          <div class="info__profile"></div>
+          <div class="info__tabs">
+            <h2
+                class="info__tabs-link"
+                :class="{ 'info__tabs-link--active': paymentPage === 'Withdraw' }"
+                @click="profileNavigation('Withdraw')"
+            >
+              Withdraw
+            </h2>
+            <h2
+                class="info__tabs-link"
+                :class="{ 'info__tabs-link--active': paymentPage === 'Deposit' }"
+                @click="profileNavigation('Deposit')"
+            >
+              Deposit
+            </h2>
+            <h2
+                class="info__tabs-link"
+                :class="{ 'info__tabs-link--active': paymentPage === 'History' }"
+                @click="profileNavigation('History')"
+            >
+              History
+            </h2>
+          </div>
+        </div>
+
+<!--        <div class="profile__main-deposit" v-if="paymentPage === 'Deposit'"></div>-->
+
+<!--        <div class="profile__main-withdraw" v-else-if="paymentPage === 'Withdraw'"></div>-->
+
+<!--        <div class="profile__main-history" v-else-if="paymentPage === 'History'"></div>-->
+
+      </div>
+
+
       <div class="profile__main-controls" v-else-if="currentPage === 'Settings'">
         <div class="profile__main-button" v-for="(button, index) in settingsButtons" :key="index" @click="profileNavigation(button)">{{ button }}</div>
       </div>
-
 
       <div class="profile__main-content" v-else-if="currentPage === 'Edit account details'">
         <div class="profile__main-form">
@@ -273,9 +415,7 @@ async function saveProfile() {
       </div>
 
 
-      <div class="profile__main-controls" v-else-if="currentPage === 'My team'">
-        <div class="profile__main-button" @click="profileNavigation('Create team')">Create team</div>
-      </div>
+
 
 
       <div class="profile__main-content" v-else-if="currentPage === 'Game profile'">
@@ -439,6 +579,23 @@ async function saveProfile() {
     &-button:nth-last-child(1){
       margin-right: 0;
     }
+
+    &-table {
+      font-family: 'Rubik', sans-serif;
+      font-style: normal;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 100%;
+      color: #FFFFFF;
+      & td {
+        padding-bottom: 18px;
+      }
+    }
+    &-name {
+      color: #67707A;
+      padding-right: 60px;
+    }
+
     &-content {
       display: flex;
       align-items: center;
@@ -465,6 +622,33 @@ async function saveProfile() {
       padding: 16px 32px;
       background: #1A222D;
     }
+
+
+    &-payments {
+      width: 100%;
+      max-width: 928px;
+
+      & .info {
+        background: #0D1D2C;
+
+        &__tabs {
+          display: flex;
+          justify-content: space-around;
+          &-link {
+            color: #ABABAB;
+            cursor: pointer;
+            line-height: 130%;
+            transition: all 0.3s ease;
+          }
+          &-link--active,
+          &-link:hover {
+            color: #FFFFFF;
+          }
+        }
+      }
+    }
+
+
   }
 }
 
