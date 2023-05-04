@@ -9,18 +9,18 @@ import { useRoute, useRouter } from 'vue-router'
 import { useProfileStore } from '@/stores/profile'
 import BaseInput from '@/components/BaseInput.vue'
 import BaseSelect from '@/components/BaseSelect.vue'
-import { between, helpers, maxValue, required } from '@vuelidate/validators'
+import {between, helpers, maxValue, required} from '@vuelidate/validators'
 
 
 const mainStore = useMainStore()
 
 const authStore = useAuthStore()
-const { token, currentUser, getProfile } = authStore
-
+const { token, getProfile } = authStore
+const { currentUser } = storeToRefs(authStore)
 
 const profileStore = useProfileStore()
-const { currentPage, paymentPage, formData, singleError, gameProfile, } = storeToRefs(profileStore)
-const { profilePages, userPanelButtons, settingsButtons } = profileStore
+const { currentPage, paymentPage, paymentMethod, paymentDone, paymentsHistory, formData, singleError, gameProfile, } = storeToRefs(profileStore)
+const { profilePages, paymentTabs, paymentMethods, userPanelButtons, settingsButtons } = profileStore
 function isActive(page: string) {
   return page === currentPage?.value
 }
@@ -30,9 +30,12 @@ const route = useRoute()
 const router = useRouter()
 onMounted(() => {
   getProfile().then(() => {
-    if (currentUser) {
-      if (currentUser.gameProfile !== null) {
-        gameProfile.value = currentUser.gameProfile
+    if (currentUser.value) {
+      if (currentUser.value.payments.length) {
+        paymentsHistory.value = currentUser.value.payments
+      }
+      if (currentUser.value.gameProfile !== null) {
+        gameProfile.value = currentUser.value.gameProfile
       } else {
         gameProfile.value = {
           riot: '',
@@ -51,7 +54,7 @@ async function getUrlQueryParams() {
   if (route.query.q) {
     if (route.query.q === 'Deposit' || route.query.q === 'Withdraw' || route.query.q === 'History') {
       currentPage.value = 'Deposit/Withdraw'
-      paymentPage.value = route.query.q.toString() as string
+      paymentPage.value = route.query.q.toString()
     } else {
       currentPage.value = route.query.q.toString()
     }
@@ -81,11 +84,11 @@ watch(() => route.query.q, () => {
     }
   }
 })
-
 function profileNavigation(goTo: string) {
   if (goTo !== 'Logout') {
     if (goTo === 'Deposit' || goTo === 'Withdraw' || goTo === 'History') {
       currentPage.value = 'Deposit/Withdraw'
+      paymentMethod.value = 'Paypal'
       paymentPage.value = goTo
     } else {
       currentPage.value = goTo
@@ -97,8 +100,8 @@ function profileNavigation(goTo: string) {
 
 
 const registrationDate = () => {
-  if (currentUser) {
-    let date = new Date(currentUser.createdAt)
+  if (currentUser.value) {
+    let date = new Date(currentUser.value.createdAt)
     let d = date.getDate()
     let m = date.getMonth() + 1
     return (d <= 9 ? '0' + d : d) + '/' + (m<=9 ? '0' + m : m) + '/' + date.getFullYear()
@@ -107,9 +110,9 @@ const registrationDate = () => {
     return ''
 }
 const userAge = computed(() => {
-  if (currentUser) {
+  if (currentUser.value) {
     let today = new Date()
-    let birthDate = new Date(currentUser.birthdate)
+    let birthDate = new Date(currentUser.value.birthdate)
     let age = today.getFullYear() - birthDate.getFullYear()
     let month = today.getMonth() - birthDate.getMonth()
     if (month < 0 || (month === 0 && today.getDate() < birthDate.getDate())) {
@@ -121,13 +124,6 @@ const userAge = computed(() => {
     return 0
 })
 
-// const teams = computed(() => {
-//   if (currentUser && currentUser.teams) {
-//     return currentUser.teams
-//   }
-//   else
-//     return ['No team']
-// })
 
 const username = helpers.regex(/^([a-z0-9]|[-._](?![-._])){4,20}$/)
 
@@ -143,10 +139,15 @@ const rules = computed(() => {
       month: { required, maxValue: maxValue(12) },
       year: { required, betweenValue: between(1900, 2010) }
     }
+  } else if (currentPage.value === 'Deposit/Withdraw') {
+    if (paymentPage.value !== 'History') {
+      return {
+        amount: { required }
+      }
+    }
+    else return ''
   }
-  else {
-    return ''
-  }
+  else return ''
 })
 
 const v$ = useVuelidate(rules, formData)
@@ -154,25 +155,69 @@ const v$ = useVuelidate(rules, formData)
 const submitForm = async () => {
   const results = await v$.value.$validate()
   if (results) {
-    await changeDetails()
+    if (currentPage.value === 'Deposit/Withdraw') {
+      await handlePayment()
+    } else {
+      await changeDetails()
+    }
   }
 }
-
 const birthdateError = computed(() => {
   if (v$.value.day?.$errors[0]?.$message === 'Value is required'|| v$.value.month?.$errors[0]?.$message === 'Value is required' || v$.value.year?.$errors[0]?.$message === 'Value is required') {
     return 'Value is required'
-  }
-  else if (v$.value.day?.$errors[0]?.$message === 'The maximum value allowed is 31' || v$.value.month?.$errors[0]?.$message === 'The maximum value allowed is 12' || v$.value.year?.$errors[0]?.$message === 'The value must be between 1900 and 2010') {
+  } else if (v$.value.day?.$errors[0]?.$message === 'The maximum value allowed is 31' || v$.value.month?.$errors[0]?.$message === 'The maximum value allowed is 12' || v$.value.year?.$errors[0]?.$message === 'The value must be between 1900 and 2010') {
     return 'Invalid date'
-  }
-  else {
+  } else {
     return ''
   }
 })
 
+
+
+async function handlePayment() {
+  if (currentUser.value) {
+    paymentDone.value = false
+    await axios.post('/api/payments',
+        {
+          data: {
+            type: paymentPage.value,
+            method: paymentMethod.value,
+            amount: formData.value.amount,
+            user: currentUser.value.id
+          }
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }).then(async response => {
+          await axios.put(`/api/users/${currentUser.value?.id}`,
+              {
+                balance: (paymentPage.value === 'Deposit') ? currentUser!.value!.balance + Number(formData.value.amount) : currentUser!.value!.balance - Number(formData.value.amount)
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }).then(() => {
+                getProfile().then(() => {
+                  paymentDone.value = true
+                }).catch(error => {
+                  console.log('An error occurred:', error.response)
+                })
+              }).catch(error => {
+                console.log('An error occurred:', error.response)
+              })
+      console.log(response.data.data.attributes)
+    }).catch(error => {
+      console.log('An error occurred:', error.response)
+    })
+  }
+}
+
 async function changeDetails() {
-  if (currentUser) {
-    await axios.put(`/api/users/${currentUser.id}`,
+  if (currentUser.value) {
+    await axios.put(`/api/users/${currentUser.value.id}`,
         {
           username: formData.value.username,
           fullName: formData.value.fullName,
@@ -190,10 +235,9 @@ async function changeDetails() {
     })
   }
 }
-
 async function saveProfile() {
-  if (currentUser) {
-    await axios.put(`/api/users/${currentUser.id}`,
+  if (currentUser.value) {
+    await axios.put(`/api/users/${currentUser.value.id}`,
         {
           gameProfile: gameProfile.value
         },
@@ -216,10 +260,10 @@ async function saveProfile() {
       <div class="profile__info-wrapper">
         <div class="profile__info-pfp"></div>
         <div class="profile__info-content">
-          <p class="profile__info-name">{{ currentUser.fullName }}</p>
-          <h2 class="profile__info-nickname">{{ currentUser.username }}</h2>
-          <p class="profile__info-team">{{ currentUser.mainTeam }}</p>
-          <p class="profile__info-balance">Balance: {{ currentUser.balance }} EUR</p>
+          <p class="profile__info-name">{{ currentUser?.fullName }}</p>
+          <h2 class="profile__info-nickname">{{ currentUser?.username }}</h2>
+          <p class="profile__info-team">{{ currentUser?.mainTeam }}</p>
+          <p class="profile__info-balance">Balance: {{ currentUser?.balance }} EUR</p>
           <div class="profile__info-icons"></div>
         </div>
       </div>
@@ -245,15 +289,15 @@ async function saveProfile() {
         <table class="profile__main-table">
           <tr>
             <td class="profile__main-name">ID</td>
-            <td>{{ currentUser.id }}</td>
+            <td>{{ currentUser?.id }}</td>
           </tr>
           <tr>
             <td class="profile__main-name">Name</td>
-            <td>{{ currentUser.fullName }}</td>
+            <td>{{ currentUser?.fullName }}</td>
           </tr>
           <tr>
             <td class="profile__main-name">Username</td>
-            <td>{{ currentUser.username }}</td>
+            <td>{{ currentUser?.username }}</td>
           </tr>
           <tr>
             <td class="profile__main-name">With us from</td>
@@ -261,7 +305,7 @@ async function saveProfile() {
           </tr>
           <tr>
             <td class="profile__main-name">Gender / Age</td>
-            <td>{{ currentUser.gender }} / {{ userAge }}</td>
+            <td>{{ currentUser?.gender }} / {{ userAge }}</td>
           </tr>
 
           <!--     Need nationality?     -->
@@ -272,7 +316,7 @@ async function saveProfile() {
 
           <tr>
             <td class="profile__main-name">Country</td>
-            <td>{{ currentUser.country }}</td>
+            <td>{{ currentUser?.country }}</td>
           </tr>
           <!--     Need website?     -->
 <!--          <tr>-->
@@ -300,34 +344,66 @@ async function saveProfile() {
           <div class="info__tabs">
             <h2
                 class="info__tabs-link"
-                :class="{ 'info__tabs-link--active': paymentPage === 'Withdraw' }"
-                @click="profileNavigation('Withdraw')"
+                v-for="(tab, index) in paymentTabs" :key="index"
+                :class="{ 'info__tabs-link--active': paymentPage === tab }"
+                @click="profileNavigation(tab)"
             >
-              Withdraw
-            </h2>
-            <h2
-                class="info__tabs-link"
-                :class="{ 'info__tabs-link--active': paymentPage === 'Deposit' }"
-                @click="profileNavigation('Deposit')"
-            >
-              Deposit
-            </h2>
-            <h2
-                class="info__tabs-link"
-                :class="{ 'info__tabs-link--active': paymentPage === 'History' }"
-                @click="profileNavigation('History')"
-            >
-              History
+              {{ tab }}
             </h2>
           </div>
         </div>
 
-<!--        <div class="profile__main-deposit" v-if="paymentPage === 'Deposit'"></div>-->
+        <div class="payment" v-if="paymentPage !== 'History'">
+          <div class="payment__methods">
+            <div
+                class="payment__methods-switch"
+                v-for="(method, index) in paymentMethods" :key="index"
+                :class="{ 'payment__methods-switch--active': paymentMethod === method }"
+                @click="paymentMethod = method"
+            >
+              {{ method }}
+            </div>
+          </div>
+          <div class="payment__inputs">
 
-<!--        <div class="profile__main-withdraw" v-else-if="paymentPage === 'Withdraw'"></div>-->
+            <BaseInput
+                type="Number"
+                :label="'Amount'"
+                placeholder="Amount"
+                v-model="formData.amount"
+                :errors="v$.amount.$errors"
+            />
 
-<!--        <div class="profile__main-history" v-else-if="paymentPage === 'History'"></div>-->
+          </div>
+          <div class="payment__buttons">
+            <button
+                class="payment__button"
+                :disabled="!paymentDone"
+                @click="submitForm"
+            >
+              {{ paymentPage }}
+            </button>
+          </div>
+        </div>
 
+        <div class="history" v-else>
+          <table class="history__table">
+            <tr>
+              <th>ID</th>
+              <th>Type</th>
+              <th>Method</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+            <tr v-for="payment in currentUser.payments" :key="payment.id">
+              <td>{{ payment.id }}</td>
+              <td>{{ payment.type }}</td>
+              <td>{{ payment.method }}</td>
+              <td>{{ payment.amount }}</td>
+              <td>Completed</td>
+            </tr>
+          </table>
+        </div>
       </div>
 
 
@@ -630,7 +706,7 @@ async function saveProfile() {
 
       & .info {
         background: #0D1D2C;
-
+        margin-bottom: 37px;
         &__tabs {
           display: flex;
           justify-content: space-around;
@@ -643,6 +719,81 @@ async function saveProfile() {
           &-link--active,
           &-link:hover {
             color: #FFFFFF;
+          }
+        }
+      }
+      & .payment {
+        display: flex;
+        padding: 19px 41px;
+        background: #0D1D2C;
+        flex-direction: column;
+        align-items: flex-start;
+        &__methods {
+          padding: 1px;
+          display: flex;
+          border-radius: 2px;
+          background: #0F1215;
+          margin-bottom: 34px;
+          border: 1px solid #20252B;
+          &-switch {
+            width: 78px;
+            color: #7A8899;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 100%;
+            padding: 8px 17px;
+            text-align: center;
+            //transition: all 0.3s ease;
+            &:hover,
+            &--active {
+              color: #F5F5F5;
+              border-radius: 1px 0 0 1px;
+              background: linear-gradient(180deg, #2788F6 0%, #0960E0 100%);
+            }
+          }
+        }
+        &__inputs {
+          width: 100%;
+          max-width: 512px;
+          margin-bottom: 103px;
+          //& .input {
+          //  background: #0F1215
+          //}
+        }
+        &__buttons {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+        }
+        &__button {
+          width: 100%;
+          border: none;
+          padding: 8px 0;
+          color: #F5F5F5;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 400;
+          line-height: 100%;
+          max-width: 160px;
+          text-align: center;
+          border-radius: 1px 0 0 1px;
+          font-family: 'Rubik', sans-serif;
+          background: linear-gradient(180deg, #2788F6 0%, #0960E0 100%);
+          &:disabled,
+          &[disabled] {
+            cursor: default;
+          }
+        }
+      }
+      & .history {
+        background: #0D1D2C;
+        padding: 19px 41px;
+        &__table {
+          width: 100%;
+          color: #ABABAB;
+          & td {
+            text-align: center;
           }
         }
       }

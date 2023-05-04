@@ -29,8 +29,8 @@ const background = computed(() => {
     <div class="profile-bar__info">
       <div class="profile-bar__info-pfp"></div>
       <div class="profile-bar__info-text">
-        <p class="profile-bar__info-name">{{ currentUser.username }}</p>
-        <p class="profile-bar__info-balance">{{ currentUser.balance }} EUR <span>/</span> {{ coin }} DTC</p>
+        <p class="profile-bar__info-name">{{ currentUser?.username }}</p>
+        <p class="profile-bar__info-balance">{{ currentUser?.balance }} EUR <span>/</span> {{ coin }} DTC</p>
       </div>
       <div class="profile-bar__info-toggle" @click="mainStore.toggleProfile"></div>
     </div>
@@ -38,7 +38,7 @@ const background = computed(() => {
       <div class="profile-bar__dropdown" v-if="mainStore.profileExpanded">
         <div class="profile-bar__dropdown-top">
           <div class="profile-bar__dropdown-level">
-            <p>LVL {{ currentUser.level }}</p>
+            <p>LVL {{ currentUser?.level }}</p>
             <div class="profile-bar__dropdown-progress"></div>
           </div>
           <div class="profile-bar__dropdown-icons"></div>
